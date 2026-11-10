@@ -116,7 +116,7 @@ window.render=function(f){
  if(S.end==='card'){const g=IM['S16_group'];sceneBuf(g,[1.1,1.16,.5,.5,.48,.46],l/(S.dur-1));blit(1+3*eo(lin(l,0,14)),0,SY);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(13,18,48,${.78*eo(lin(l,2,16))})`;x.fillRect(0,SY,W,SH);scanlines();frame();
    const s=eo(lin(l,4,18));x.save();x.translate(540,SY+250);x.scale(s,s);x.imageSmoothingEnabled=true;x.drawImage(LOGO,-170,-170,340,340);x.restore();
    drawT('上島！',540,SY+570,{size:12,scale:14,color:'#ffd166',stroke:'#000',olw:1},lin(l,10,16),.7+.3*eo(lin(l,10,20)));
-   const bt=eo(lin(l,22,32));if(bt>0){const p=1+0.04*Math.sin(Math.max(0,l-32)*0.25);x.save();x.translate(540,1500);x.scale(bt*p,bt*p);x.translate(-540,-1500);pbox(60,1410,960,180,'#ffd166','#fff');drawT('terry-island.pages.dev',540,1478,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#14204a',stroke:null});drawT('▶ 點連結，馬上上島',540,1540,{size:12,scale:4,color:'#14204a',stroke:null});x.restore();}
+   const bt=eo(lin(l,22,32));if(bt>0){const p=1+0.04*Math.sin(Math.max(0,l-32)*0.25);x.save();x.translate(540,1500);x.scale(bt*p,bt*p);x.translate(-540,-1500);pbox(60,1410,960,180,'#ffd166','#fff');drawT('terry-island.pages.dev',540,1500,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#14204a',stroke:null});x.restore();}
    drawT('泰瑞島｜UIB 電銷島',540,1690,{size:12,scale:4,color:'#fff'},lin(l,30,38));
    if(Math.floor(l/15)%2===0&&l>45)drawT('PRESS START',540,1810,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});
    confetti(Math.max(0,l-12),0,SY+150,W);header();return}
@@ -128,15 +128,16 @@ window.render=function(f){
  const pin=1+11*(1-eo(lin(l,0,7))),pout=S.noOut?1:1+11*eo(lin(l,S.dur-6,S.dur));const px=Math.max(pin,pout);
  blit(px,Math.round(ox/3)*3,Math.round((oy-SY)/3)*3+SY);
  // overlays inside scene
- for(const e of S.fx){const t=l-(e.at||0);
+ const bigTop=[];for(const e of S.fx){const t=l-(e.at||0);
   if(e.t==='flash'&&t>=0&&t<6){x.fillStyle=`rgba(255,255,255,${1-t/6})`;x.fillRect(0,SY,W,SH)}
-  if(e.t==='big'&&t>=0&&t<e.len){const sc=t<6?0.5+0.5*eo(t/6):1;const fl=t>e.len-6?(e.len-t)/6:1;drawT(e.txt,540,SY+SH/2,{size:16,scale:7,font:'"Press Start 2P"',weight:400,color:e.c,stroke:'#000',olw:2},fl,sc)}
+  if(e.t==='big'&&t>=0&&t<e.len){const sc=t<6?0.5+0.5*eo(t/6):1;const fl=t>e.len-6?(e.len-t)/6:1;if(e.pos==='top'){bigTop.push([e,fl,sc]);continue}drawT(e.txt,540,SY+SH/2,{size:16,scale:7,font:'"Press Start 2P"',weight:400,color:e.c,stroke:'#000',olw:2},fl,sc)}
   if(e.t==='tag'&&t>=0){const sc=0.4+0.6*eo(cl(t/6));drawT(e.txt,e.x*W,SY+e.y*SH+18,{size:12,scale:6,font:'"Press Start 2P"',weight:400,color:'#fff',stroke:e.c,olw:2},1,sc)}
   if(e.t==='pop'&&t>=0&&t<30){drawT(e.txt,e.x*W,SY+e.y*SH-t*3,{size:12,scale:5,font:e.txt.match(/[A-Z+0-9]/)?'"Press Start 2P"':'Cubic11',weight:400,color:e.c,stroke:'#000',olw:2},t>22?(30-t)/8:1,0.6+0.4*eo(cl(t/5)))}
   if(e.t==='combo'&&t>=0){const n=t<14?1:t<28?2:3;drawT('COMBO x'+n,540,SY+110,{size:14,scale:5,font:'"Press Start 2P"',weight:400,color:['#ffd166','#ff8fab','#69db7c'][n-1],stroke:'#000',olw:2},1,1+.25*Math.max(0,1-((t%14)/5)))}
   if(e.t==='confetti'&&t>=0)confetti(t,0,SY+SH*.5,W);
  }
  scanlines();frame();
+ for(const [e,fl,sc] of bigTop)drawT(e.txt,540,SY+10,{size:16,scale:4,font:'"Press Start 2P"',weight:400,color:e.c,stroke:'#000',olw:2},fl,sc);
  // HUD above scene
  const huds=S.fx.filter(e=>e.t==='hud');if(huds.length){let a=huds[0].a[0],b=huds[0].b[0];for(const h of huds){const tt=h.len?eio(lin(l,h.at,h.at+h.len)):1;if(!h.len||l>=h.at){a=h.a[0]+(h.a[1]-h.a[0])*tt;b=h.b[0]+(h.b[1]-h.b[0])*tt}}
   bar(60,420,400,a,'#ffd166',false);bar(620,420,400,b,'#ef6a55',true);drawT('小狗新人',150,495,{size:12,scale:4,color:'#ffd166'});drawT('客戶魔王',930,495,{size:12,scale:4,color:'#ef6a55'});drawT('VS',540,432,{size:10,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'})}

@@ -390,7 +390,8 @@
     "txt": "LEVEL UP!",
     "at": 6,
     "len": 50,
-    "c": "#ffd166"
+    "c": "#ffd166",
+    "pos": "top"
    }
   ]
  },
@@ -466,7 +467,8 @@
     "txt": "YOU WIN!",
     "at": 0,
     "len": 60,
-    "c": "#ffd166"
+    "c": "#ffd166",
+    "pos": "top"
    },
    {
     "t": "confetti",
