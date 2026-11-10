@@ -46,9 +46,18 @@ window.render=function(f){
  x.fillStyle='#000';x.fillRect(0,0,W,H);
  let s0=0,S=null,l=0,idx=0;for(let i=0;i<TL.length;i++){if(f<s0+TL[i].dur){S=TL[i];l=f-s0;idx=i;break}s0+=TL[i].dur}
  if(!S){S=TL[TL.length-1];l=S.dur-1}
- if(S.end==='count'){const k=Math.floor(l/22),lt=l%22;const cols=['#ef6a55','#ffd166','#69db7c'];
-   drawT(String(3-k),540,960,{size:16,scale:34,font:'"Press Start 2P"',weight:400,color:cols[k],stroke:'#000'},1,0.6+0.4*eo(cl(lt/8)));header();return}
- if(S.end==='card'){const g=IM['S16_group'];sceneBuf(g,[1.0,1.0,.5,.5,.5,.5],0);blit(1+8*(1-eo(lin(l,0,10))),0,SY);x.fillStyle='rgba(0,0,0,.45)';x.fillRect(0,SY,W,SH);scanlines();
+ if(S.end==='count'){const g=IM['S16_group'];const k=Math.min(2,Math.floor(l/24)),lt=l-k*24;const cols=['#ef6a55','#ffd166','#69db7c'];
+   sceneBuf(g,[1.0,1.08,.5,.5,.5,.48],l/(S.dur-1));
+   const jump=lt<10?Math.round(Math.sin(Math.PI*lt/10)*8)*3:0;blit(1,0,SY-jump);
+   if(lt<5){x.fillStyle=`rgba(255,255,255,${0.35*(1-lt/5)})`;x.fillRect(0,SY,W,SH)}
+   scanlines();
+   drawT('準備好了嗎？',540,470,{size:14,scale:5,color:'#ffd166'});
+   const dy=-260*(1-eo(cl(lt/6)));const sq=lt>=6&&lt<10?1+0.12*Math.sin(Math.PI*(lt-6)/4):1;
+   drawT(String(3-k),540,SY+SH/2+dy,{size:16,scale:22,font:'"Press Start 2P"',weight:400,color:cols[k],stroke:'#000',olw:2},1,sq);
+   if(lt>=6&&lt<16){x.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<8;i++){const a=i*Math.PI/4,r=180+(lt-6)*28;x.fillRect(Math.round((540+Math.cos(a)*r)/6)*6,Math.round((SY+SH/2+Math.sin(a)*r*0.6)/6)*6,18,18)}}
+   const s2=typed('出發！',Math.max(0,l-50),0.3);if(s2&&k===2)drawT(s2,540,1450,{size:16,scale:5,color:'#fff'});
+   header();return}
+ if(S.end==='card'){const g=IM['S16_group'];sceneBuf(g,[1.08,1.14,.5,.5,.48,.46],l/(S.dur-1));const jump=l<12?Math.round(Math.sin(Math.PI*l/12)*14)*3:0;blit(1,0,SY-jump);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(0,0,0,${.45*eo(lin(l,4,20))})`;x.fillRect(0,SY,W,SH);scanlines();
    const s=eo(lin(l,4,18));x.save();x.translate(540,SY+270);x.scale(s,s);x.drawImage(LOGO,-150,-150,300,300);x.restore();
    drawT('上島！',540,SY+560,{size:26,scale:6,color:'#ffd166'},lin(l,10,16),.7+.3*eo(lin(l,10,20)));
    drawT('泰瑞島｜UIB 電銷島',540,1430,{size:14,scale:4},lin(l,20,28));
@@ -60,7 +69,7 @@ window.render=function(f){
  let ox=0,oy=SY;for(const e of S.fx){if(e.t==='shake'&&l>=e.at&&l<e.at+e.len){ox+=((l%2)?1:-1)*e.amp*3}
    if(e.t==='hit'&&l>=e.at&&l<e.at+8){const a=(8-(l-e.at))*3;ox+=((l%2)?1:-1)*a;oy+=((l%3)-1)*a*.6}}
  // pixel transition in/out
- const pin=1+11*(1-eo(lin(l,0,7))),pout=1+11*eo(lin(l,S.dur-6,S.dur));const px=Math.max(pin,pout);
+ const pin=1+11*(1-eo(lin(l,0,7))),pout=S.noOut?1:1+11*eo(lin(l,S.dur-6,S.dur));const px=Math.max(pin,pout);
  blit(px,Math.round(ox/3)*3,Math.round((oy-SY)/3)*3+SY);
  // overlays inside scene
  for(const e of S.fx){const t=l-(e.at||0);

@@ -91,9 +91,11 @@ section(sec(3), sec(3) + 0.3, CH_MIN, None, drums=False, gain=0.6)            # 
 section(sec(4), sec(6), CH_MAJ, None, drums=False, gain=0.6)                   # calm drift (bass + arp)
 section(sec(6), sec(14), CH_MAJ, MEL_A, drums=True, gain=1.0)                  # adventure
 section(sec(14), sec(15), CH_MIN, MEL_B, drums=True, lead_duty=0.5, gain=1.0)  # rematch
-section(sec(15), sec(19), CH_MAJ, MEL_B, drums=True, gain=1.0)                  # victory to group
+ci = [i for i, s in enumerate(TL) if s.get('end') == 'count'][0]
+section(sec(15), sec(ci + 1), CH_MAJ, MEL_B, drums=True, gain=1.0)                  # victory through countdown
+for k in range(6): add(mus, sec(ci + 1) - B + k * B / 6, noise(0.06, 0.02, 2), 0.18)  # snare roll
 # fade before countdown
-fe = int(sec(19) * SR); mus[fe - int(0.3 * SR):fe] *= np.linspace(1, 0, int(0.3 * SR)); mus[fe:] = 0
+fe = int(sec(ci + 1) * SR); mus[fe:] = 0
 
 # --- SFX
 def blip(m, d=0.06, duty=0.5): return sq(m, d, duty) * env(int(d * SR), d=0.02, s=0.4)
@@ -126,16 +128,15 @@ for i, s in enumerate(TL):
     if s.get('dlg'):
         for k in range(12): add(sfx, t0 + 0.3 + k * 0.066, blip(76 + (k % 3) * 2, 0.03, 0.5), 0.06)
 # countdown beeps + final
-ci = [i for i, s in enumerate(TL) if s.get('end') == 'count'][0]
-for k in range(3): add(sfx, sec(ci) + k * 22 / FPS, blip(72, 0.15, 0.5), 0.2)
+for k in range(3): add(sfx, sec(ci) + (k * 24 + 6) / FPS, blip(72 + (7 if k == 2 else 0), 0.15, 0.5), 0.2)
 cardt = sec(ci + 1)
 fan = np.zeros(int(2.5 * SR))
 for j, m in enumerate([72, 76, 79, 84]):
     b = blip(m, 0.12, 0.25); fan[int(j * 0.1 * SR):int(j * 0.1 * SR) + len(b)] += b
 for m in [60, 64, 67, 72]:
     s2 = sq(m, 1.8, 0.25) * env(int(1.8 * SR), d=0.6, s=0.3, r=0.5); fan[int(0.45 * SR):int(0.45 * SR) + len(s2)] += s2 * 0.5
-add(sfx, cardt + 0.3, fan, 0.18)
-add(sfx, cardt + 0.3, kick(), 0.4)
+add(sfx, cardt, fan, 0.2)
+add(sfx, cardt, kick(), 0.45)
 
 mix = mus + sfx
 mix /= np.abs(mix).max() / 0.85
