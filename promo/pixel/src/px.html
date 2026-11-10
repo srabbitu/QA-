@@ -30,6 +30,41 @@ function typed(s,l,speed=1.3){return [...s].slice(0,Math.floor(l*speed)).join(''
 let seed=1;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 const CONF=[];for(let i=0;i<90;i++)CONF.push({x:rnd(),vx:(rnd()-.5)*10,vy:-rnd()*22-8,c:['#ffd166','#ef6a55','#69db7c','#8ecae6','#ff8fab','#c77dff'][i%6],s:2+Math.floor(rnd()*2)});
 function confetti(t,ox,oy,ww){for(const p of CONF){const X=ox+p.x*ww+p.vx*t,Y=oy+p.vy*t+.9*t*t;if(Y>oy+SH+40)continue;x.fillStyle=p.c;x.fillRect(Math.round(X/6)*6,Math.round(Y/6)*6,p.s*6,p.s*6)}}
+
+// ---- layered character animation
+const AN='/home/user/QA-/promo/pixel/anim/';
+const comp=document.createElement('canvas');comp.width=600;comp.height=338;const cx2=comp.getContext('2d');
+let LAY={},PL={},LMETA={};
+const S_=Math.sin,PI=Math.PI;
+function hop(l,at,len,amp){const t=(l-at)/len;return t>=0&&t<=1?-amp*4*t*(1-t):0}
+function pulse(l,at,len,amp){const t=(l-at)/len;return t>=0&&t<=1?amp*S_(PI*t):0}
+// motion per actor: returns {dx,dy,sx,sy,rot}
+const MOT={
+ 'S01_city_morning/pup':l=>({dx:l*0.45,dy:-Math.abs(S_(l*PI/9))*4,rot:S_(l*PI/9)*0.04}),
+ 'S02_phone_rings/pup':l=>({dx:(l>10&&l<60)?((l%2)?1.2:-1.2):0,sy:1+0.02*S_(l*0.3),dy:0}),
+ 'S02_phone_rings/phone':l=>({rot:(l>10&&l<60)?S_(l*2.2)*0.09:0,dy:(l>10&&l<60)?-Math.abs(S_(l*1.1))*5:0}),
+ 'S03_round1/pup':l=>({dy:-Math.abs(S_(l*PI/12))*3,dx:-pulse(l,60,10,14)-pulse(l,78,10,16),rot:-pulse(l,60,10,0.12)-pulse(l,78,10,0.14)}),
+ 'S03_round1/boss':l=>({dy:S_(l*0.12)*6,dx:-pulse(l,54,12,40)-pulse(l,72,12,46),sx:1+pulse(l,54,12,0.08)+pulse(l,72,12,0.08),rot:S_(l*0.2)*0.03}),
+ 'S04_ko/pup':l=>({dx:l<12?((l%2)?2:-2):0,rot:l<12?((l%2)?0.03:-0.03):S_(l*0.25)*0.015}),
+ 'S04_ko/boss':l=>({dy:-Math.abs(S_(l*0.55))*7,rot:S_(l*0.55)*0.05,sy:1+Math.abs(S_(l*0.55))*0.04}),
+ 'S05_drift/boat':l=>({dy:S_(l*0.11)*4,rot:S_(l*0.08)*0.035,dx:l*0.25}),
+ 'S06_harbor_welcome/terry':l=>({dx:S_(l*0.09)*4,dy:-Math.abs(S_(l*0.18))*2,sy:1+0.015*S_(l*0.18)}),
+ 'S09b_qa_gate/pup':l=>({dx:-pulse(l,26,10,14),dy:hop(l,40,12,6),rot:-pulse(l,26,10,0.08)}),
+ 'S09b_qa_gate/frog':l=>({dy:hop(l%18,0,18,9)}),
+ 'S10_deflect/pup':l=>({dx:pulse(l,4,10,22)+pulse(l,18,10,22)+pulse(l,32,10,26),dy:-Math.abs(S_(l*0.3))*2,sx:1+pulse(l,4,10,0.04)+pulse(l,18,10,0.04)+pulse(l,32,10,0.05)}),
+ 'S11_bubble_tea/pup':l=>({dy:S_(l*0.2)*2,rot:S_(l*0.1)*0.04,sy:1+0.03*S_(l*0.4)}),
+ 'S12_level_up/pup':l=>({dy:18-36*Math.min(1,l/40)+S_(l*0.25)*3,sx:1+pulse(l,38,10,0.08),sy:1-pulse(l,38,10,0.06)}),
+ 'S13_rematch/pup':l=>({dy:-Math.abs(S_(l*PI/12))*3,dx:pulse(l,40,10,24)+pulse(l,56,10,24),rot:pulse(l,40,10,0.08)+pulse(l,56,10,0.08)}),
+ 'S13_rematch/boss':l=>({dy:S_(l*0.12)*5+(l>64?Math.min(30,(l-64)*1.2):0),dx:pulse(l,45,10,24)+pulse(l,60,10,28)+((l>=45&&l<55)||(l>=60&&l<70)?((l%2)?3:-3):0),rot:pulse(l,60,10,0.15)+(l>64?Math.min(0.3,(l-64)*0.012):0)}),
+ 'S14_win/pup':l=>({dy:hop(l%24,0,24,14),sy:1+(l%24<3?-0.06:0)}),
+ 'S14_win/phone':l=>({dy:hop((l+12)%24,0,24,12),rot:S_(l*0.26)*0.05}),
+};
+function compose(scene,l){
+ cx2.clearRect(0,0,600,338);cx2.drawImage(PL[scene]||IM[scene],0,0,600,338);
+ const m=LMETA[scene];if(!m)return comp;
+ for(const name in m){const g=m[name],img=LAY[scene+'/'+name];const f=MOT[scene+'/'+name];const o=Object.assign({dx:0,dy:0,sx:1,sy:1,rot:0},f?f(l):{});
+  const ax=g.x+g.w/2,ay=g.y+g.h;cx2.save();cx2.translate(ax+o.dx,ay+o.dy);cx2.rotate(o.rot);cx2.scale(o.sx,o.sy);cx2.drawImage(img,-g.w/2,-g.h,g.w,g.h);cx2.restore();}
+ return comp;}
 // ---- scene renderer into buf
 function sceneBuf(img,cam,u){const z=cam[0]+(cam[1]-cam[0])*eio(u),cx=cam[2]+(cam[3]-cam[2])*eio(u),cy=cam[4]+(cam[5]-cam[4])*eio(u);
  const sw=img.width/z,sh=img.height/z;let sx=cx*img.width-sw/2,sy=cy*img.height-sh/2;sx=cl(sx,0,img.width-sw);sy=cl(sy,0,img.height-sh);
@@ -64,7 +99,7 @@ window.render=function(f){
    drawT('terry-island.pages.dev',540,1550,{size:9,scale:5,font:'"Press Start 2P"',weight:400,color:'#8ecae6'},lin(l,28,36));
    if(Math.floor(l/15)%2===0&&l>40)drawT('PRESS START',540,1700,{size:8,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'});
    confetti(Math.max(0,l-12),0,SY+150,W);header();return}
- const img=IM[S.img],u=l/(S.dur-1);sceneBuf(img,S.cam,u);
+ const u=l/(S.dur-1);const img=LMETA[S.img]?compose(S.img,l):IM[S.img];sceneBuf(img,S.cam,u);
  // shake
  let ox=0,oy=SY;for(const e of S.fx){if(e.t==='shake'&&l>=e.at&&l<e.at+e.len){ox+=((l%2)?1:-1)*e.amp*3}
    if(e.t==='hit'&&l>=e.at&&l<e.at+8){const a=(8-(l-e.at))*3;ox+=((l%2)?1:-1)*a;oy+=((l%3)-1)*a*.6}}
@@ -95,7 +130,7 @@ window.render=function(f){
 };
 window.ready=(async()=>{TL=window.TLDATA;await document.fonts.load('900 14px "Noto Sans TC"','泰瑞島');await document.fonts.load('16px "Press Start 2P"');await document.fonts.ready;
  for(const s of TL)if(s.img&&!IM[s.img])IM[s.img]=await load(FR+s.img+'.png');IM['S16_group']=IM['S16_group']||await load(FR+'S16_group.png');
- PORT=await load(FR+'ref_terry_portrait_v2.png');
+ PORT=await load(FR+'ref_terry_portrait_v2.png');LMETA=window.LAYDATA||{};for(const sc in LMETA){PL[sc]=await load(AN+'plates/'+sc+'.png');for(const n in LMETA[sc])LAY[sc+'/'+n]=await load(AN+'layers/'+sc+'__'+n+'.png');}
  LOGO=await load('data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -3 70 70"><path d="M32 5 54 17.5v25L32 55 24.5 50.7 12.5 58.5l3-12.3L10 42.5v-25z" transform="matrix(1.08 0 0 1.08 -2.56 -2.48)" fill="#fff" stroke="#fff" stroke-width="9.5" stroke-linejoin="round"/><path d="M32 5 54 17.5v25L32 55 24.5 50.7 12.5 58.5l3-12.3L10 42.5v-25z" transform="matrix(1.08 0 0 1.08 -2.56 -2.48)" fill="#ef6a55" stroke="#ef6a55" stroke-width="4.6" stroke-linejoin="round"/><path d="M15 45c4.5-7.5 10.5-11 17-11s12.5 3.5 17 11z" fill="#fffaf0"/><path d="M29.2 35.5h5.6L33.4 19h-2.8z" fill="#fffaf0"/><path d="M29.9 25.5h4.2l.35 3.2h-4.9z" fill="#ef6a55"/><path d="M30.2 19v-2.6a1.8 1.8 0 0 1 3.6 0V19z" fill="#ffd166"/><path d="M23.2 50c1.9-1.2 3.7-1.2 5.6 0s3.7 1.2 5.6 0 3.7-1.2 5.6 0" fill="none" stroke="#fffaf0" stroke-width="2" stroke-linecap="round"/></svg>`));
  return TL.reduce((a,s)=>a+s.dur,0);})();
 </script></body></html>
