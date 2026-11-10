@@ -35,7 +35,7 @@ function confetti(t,ox,oy,ww){for(const p of CONF){const X=ox+p.x*ww+p.vx*t,Y=oy
 // ---- layered character animation
 const AN='/home/user/QA-/promo/pixel/anim/';
 const comp=document.createElement('canvas');comp.width=600;comp.height=338;const cx2=comp.getContext('2d');
-let LAY={},PL={},LMETA={};
+let LAY={},PL={},LMETA={},WAVE=[];
 const S_=Math.sin,PI=Math.PI;
 function hop(l,at,len,amp){const t=(l-at)/len;return t>=0&&t<=1?-amp*4*t*(1-t):0}
 function pulse(l,at,len,amp){const t=(l-at)/len;return t>=0&&t<=1?amp*S_(PI*t):0}
@@ -97,7 +97,7 @@ function fireworks(ctx,l){ // pulse existing bursts
   for(let k=0;k<f.n;k++){const a=k/f.n*Math.PI*2;const px=Math.round(f.x+Math.cos(a)*rr),py=Math.round(f.y+Math.sin(a)*rr+u*u*6);ctx.fillRect(px,py,2,2);if(u<0.5)ctx.fillRect(Math.round(f.x+Math.cos(a)*rr*0.6),Math.round(f.y+Math.sin(a)*rr*0.6),1,1)}
   if(u<0.15){ctx.globalAlpha=1-u/0.15;ctx.fillStyle='#fff';ctx.fillRect(Math.round(f.x)-2,Math.round(f.y)-2,5,5)}}
  ctx.restore()}
-const SFX2={S16_group:(c,l)=>warpScene('S16_group',l,c),S15_festival:(c,l)=>{c.drawImage(IM['S15_festival'],0,0,600,338);fireworks(c,l)}};
+const SFX2={S16_group:(c,l)=>{const fr=WAVE[Math.floor(l/5)%WAVE.length];c.drawImage(fr,0,0,600,338)},S15_festival:(c,l)=>{c.drawImage(IM['S15_festival'],0,0,600,338);fireworks(c,l)}};
 function sceneImg(sc,l){if(LMETA[sc])return compose(sc,l);if(SFX2[sc]){SFX2[sc](cx2,l);return comp}return IM[sc]}
 // ---- scene renderer into buf
 function sceneBuf(img,cam,u){const z=cam[0]+(cam[1]-cam[0])*eio(u),cx=cam[2]+(cam[3]-cam[2])*eio(u),cy=cam[4]+(cam[5]-cam[4])*eio(u);
@@ -122,9 +122,10 @@ function dialog(txt,l,st){pbox(54,1380,972,290);let name=null,col='#fff',body=tx
  lines.forEach((ln,i)=>{const n=Math.min([...ln].length,left);left-=n;if(n<=0)return;const part=[...ln].slice(0,n).join('');const full=ptxt(ln,{size:12,scale:6,color:col});const t=ptxt(part,{size:12,scale:6,color:col});
   x.imageSmoothingEnabled=false;const y0=lines.length>1?1470+i*96:1525;x.drawImage(t.o,Math.round(540-full.w/2),Math.round(y0-t.h/2),t.w,t.h)});
  if([...shown].length>=[...body.replace(/\n/g,'')].length&&Math.floor(l/10)%2===0)drawT('▼',960,1630,{size:12,scale:3,color:'#fff'})}
+function shrink(ay,fn){x.save();x.translate(540,ay);x.scale(.8,.8);x.translate(-540,-ay);fn();x.restore()}
 const CHAP=['出發','第一戰','漂流','上島','修行','第二戰','全島'];
-function progress(ch){const n=CHAP.length,w=120,g=16,X0=(W-(n*w+(n-1)*g))/2,Y=1745;for(let i=0;i<n;i++){const X=X0+i*(w+g);x.fillStyle=i<ch?'#ffd166':i===ch?'#ef6a55':'#2a3466';x.fillRect(X,Y,w,22);if(i===ch){x.fillStyle='#fff';x.fillRect(X,Y,w,6)}}
- drawT('STAGE '+(ch+1)+'/'+n,300,1820,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});drawT(CHAP[ch],760,1822,{size:12,scale:4,color:'#fff'})}
+function progress(ch){const n=CHAP.length,w=120,g=16,X0=(W-(n*w+(n-1)*g))/2,Y=1675;for(let i=0;i<n;i++){const X=X0+i*(w+g);x.fillStyle=i<ch?'#ffd166':i===ch?'#ef6a55':'#2a3466';x.fillRect(X,Y,w,22);if(i===ch){x.fillStyle='#fff';x.fillRect(X,Y,w,6)}}
+ drawT('STAGE '+(ch+1)+'/'+n,300,1750,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});drawT(CHAP[ch],760,1752,{size:12,scale:4,color:'#fff'})}
 function chapOf(img){return ({S01_city_morning:0,S02_phone_rings:0,S03_round1:1,S04_ko:1,S05_drift:2,S06_harbor_welcome:3,S06b_islanders_welcome:3,S08_disc_masters:4,S09_dojo:4,S09b_qa_gate:4,S09c_feelings_garden:4,S10_deflect:4,S11_bubble_tea:4,S12_level_up:4,S13_rematch:5,S14_win:5,S17_world_map:6,S15_festival:6,S16_group:6})[img]}
 function chip(txt,a){const isEn=/^[A-Z0-9 !]+$/.test(txt);const o=isEn?{size:8,scale:5,font:'"Press Start 2P"',weight:400,color:'#14204a',stroke:null}:{size:12,scale:5,color:'#14204a',stroke:null};const t=ptxt(txt,o);x.save();x.globalAlpha=a;pbox(540-t.w/2-36,410,t.w+72,104,'#ffd166','#fff');x.restore();drawT(txt,540,462,o,a)}
 // ---- main
@@ -141,7 +142,7 @@ window.render=function(f){
    const dy=-260*(1-eo(cl(lt/6)));const sq=lt>=6&&lt<10?1+0.12*Math.sin(Math.PI*(lt-6)/4):1;
    drawT(String(3-k),540,SY+SH/2+dy,{size:16,scale:22,font:'"Press Start 2P"',weight:400,color:cols[k],stroke:'#000',olw:2},1,sq);
    if(lt>=6&&lt<16){x.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<8;i++){const a=i*Math.PI/4,r=180+(lt-6)*28;x.fillRect(Math.round((540+Math.cos(a)*r)/6)*6,Math.round((SY+SH/2+Math.sin(a)*r*0.6)/6)*6,18,18)}}
-   dialog(k===2?'出發！':'',l,50);progress(6);
+   shrink(1360,()=>dialog(k===2?'出發！':'',l,50));shrink(1700,()=>progress(6));
    header();return}
  if(S.end==='card'){const g=sceneImg('S16_group',f);sceneBuf(g,[1.1,1.16,.5,.5,.48,.46],l/(S.dur-1));blit(1+3*eo(lin(l,0,14)),0,SY);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(13,18,48,${.78*eo(lin(l,2,16))})`;x.fillRect(0,SY,W,SH);scanlines();frame();
    const s=eo(lin(l,4,18));x.save();x.translate(540,SY+250);x.scale(s,s);x.imageSmoothingEnabled=true;x.drawImage(LOGO,-170,-170,340,340);x.restore();
@@ -173,17 +174,17 @@ window.render=function(f){
   bar(60,420,400,a,'#ffd166',false);bar(620,420,400,b,'#ef6a55',true);drawT('小狗新人',150,495,{size:12,scale:4,color:'#ffd166'});drawT('客戶魔王',930,495,{size:12,scale:4,color:'#ef6a55'});drawT('VS',540,432,{size:10,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'})}
  else if(S.top){chip(S.top,lin(l,2,8))}
  // subtitle / dialogue below
- if(S.sub||S.subs){let txt=S.sub,st=6;if(S.subs){for(const q of S.subs)if(l>=q[0]){txt=q[1];st=q[0]+2}}if(txt)dialog(txt,l,st)}
- if(S.dlg){const by=1380,bh=290;pbox(54,by,972,bh);
+ if(S.sub||S.subs){let txt=S.sub,st=6;if(S.subs){for(const q of S.subs)if(l>=q[0]){txt=q[1];st=q[0]+2}}if(txt)shrink(1360,()=>dialog(txt,l,st))}
+ if(S.dlg)shrink(1360,()=>{{const by=1380,bh=290;pbox(54,by,972,bh);
   x.imageSmoothingEnabled=false;x.drawImage(PORT,84,by+22,246,246);
   drawT('島主 泰瑞',470,by+60,{size:12,scale:4,color:'#ffd166'});const s=typed(S.dlg,Math.max(0,l-8),0.6);const L2=wrap(s,10);L2.forEach((ln,i)=>{const t=ptxt(ln,{size:12,scale:5,color:'#fff'});x.imageSmoothingEnabled=false;x.drawImage(t.o,370,Math.round(by+170+i*80-t.h/2),t.w,t.h)});
-  if(Math.floor(l/10)%2===0&&l>40)drawT('▼',960,by+250,{size:12,scale:3,color:'#fff'})}
- {const ch=chapOf(S.img);if(ch!==undefined)progress(ch);}
+  if(Math.floor(l/10)%2===0&&l>40)drawT('▼',960,by+250,{size:12,scale:3,color:'#fff'})}});
+ {const ch=chapOf(S.img);if(ch!==undefined)shrink(1700,()=>progress(ch));}
  header();
 };
 window.ready=(async()=>{TL=window.TLDATA;await document.fonts.load('12px Cubic11','泰瑞島');await document.fonts.load('16px "Press Start 2P"');await document.fonts.ready;
  for(const s of TL)if(s.img&&!IM[s.img])IM[s.img]=await load(FR+s.img+'.png');IM['S16_group']=IM['S16_group']||await load(FR+'S16_group.png');
- PORT=await load(FR+'ref_terry_portrait_v2.png');LMETA=window.LAYDATA||{};for(const sc in LMETA){PL[sc]=await load(AN+'plates/'+sc+'.png');for(const n in LMETA[sc])LAY[sc+'/'+n]=await load(AN+'layers/'+sc+'__'+n+'.png');}
+ PORT=await load(FR+'ref_terry_portrait_v2.png');{const wb=await load(FR+'S16_group_wave_b.png'),wc=await load(FR+'S16_group_wave_c.png');WAVE=[IM['S16_group'],wc,wb,wc];}LMETA=window.LAYDATA||{};for(const sc in LMETA){PL[sc]=await load(AN+'plates/'+sc+'.png');for(const n in LMETA[sc])LAY[sc+'/'+n]=await load(AN+'layers/'+sc+'__'+n+'.png');}
  LOGO=await load('data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -3 70 70"><path d="M32 5 54 17.5v25L32 55 24.5 50.7 12.5 58.5l3-12.3L10 42.5v-25z" transform="matrix(1.08 0 0 1.08 -2.56 -2.48)" fill="#fff" stroke="#fff" stroke-width="9.5" stroke-linejoin="round"/><path d="M32 5 54 17.5v25L32 55 24.5 50.7 12.5 58.5l3-12.3L10 42.5v-25z" transform="matrix(1.08 0 0 1.08 -2.56 -2.48)" fill="#ef6a55" stroke="#ef6a55" stroke-width="4.6" stroke-linejoin="round"/><path d="M15 45c4.5-7.5 10.5-11 17-11s12.5 3.5 17 11z" fill="#fffaf0"/><path d="M29.2 35.5h5.6L33.4 19h-2.8z" fill="#fffaf0"/><path d="M29.9 25.5h4.2l.35 3.2h-4.9z" fill="#ef6a55"/><path d="M30.2 19v-2.6a1.8 1.8 0 0 1 3.6 0V19z" fill="#ffd166"/><path d="M23.2 50c1.9-1.2 3.7-1.2 5.6 0s3.7 1.2 5.6 0 3.7-1.2 5.6 0" fill="none" stroke="#fffaf0" stroke-width="2" stroke-linecap="round"/></svg>`));
  return TL.reduce((a,s)=>a+s.dur,0);})();
 </script></body></html>
