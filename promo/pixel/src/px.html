@@ -44,8 +44,8 @@ const MOT={
  'S01_city_morning/pup':l=>({dx:l*0.45,dy:-Math.abs(S_(l*PI/9))*4,rot:S_(l*PI/9)*0.04}),
  'S02_phone_rings/pup':l=>({dx:(l>10&&l<60)?((l%2)?1.2:-1.2):0,sy:1+0.02*S_(l*0.3),dy:0}),
  'S02_phone_rings/phone':l=>({rot:(l>10&&l<60)?S_(l*2.2)*0.09:0,dy:(l>10&&l<60)?-Math.abs(S_(l*1.1))*5:0}),
- 'S03_round1/pup':l=>({dy:-Math.abs(S_(l*PI/12))*3,dx:-pulse(l,60,10,14)-pulse(l,78,10,16),rot:-pulse(l,60,10,0.12)-pulse(l,78,10,0.14)}),
- 'S03_round1/boss':l=>({dy:S_(l*0.12)*6,dx:-pulse(l,54,12,40)-pulse(l,72,12,46),sx:1+pulse(l,54,12,0.08)+pulse(l,72,12,0.08),rot:S_(l*0.2)*0.03}),
+ 'S03_round1/pup':l=>({dy:-Math.abs(S_(l*PI/12))*3,dx:-pulse(l,50,10,14)-pulse(l,90,10,16)-pulse(l,118,10,18),rot:-pulse(l,50,10,0.12)-pulse(l,90,10,0.14)-pulse(l,118,10,0.16)}),
+ 'S03_round1/boss':l=>({dy:S_(l*0.12)*6,dx:-pulse(l,44,12,40)-pulse(l,84,12,46)-pulse(l,112,12,50),sx:1+pulse(l,44,12,0.08)+pulse(l,84,12,0.08)+pulse(l,112,12,0.1),rot:S_(l*0.2)*0.03}),
  'S04_ko/pup':l=>({dx:l<12?((l%2)?2:-2):0,rot:l<12?((l%2)?0.03:-0.03):S_(l*0.25)*0.015}),
  'S04_ko/boss':l=>({dy:-Math.abs(S_(l*0.55))*7,rot:S_(l*0.55)*0.05,sy:1+Math.abs(S_(l*0.55))*0.04}),
  'S05_drift/boat':l=>({dy:S_(l*0.11)*3,rot:S_(l*0.08)*0.035,dx:l*0.12}),
@@ -97,7 +97,18 @@ function fireworks(ctx,l){ // pulse existing bursts
   for(let k=0;k<f.n;k++){const a=k/f.n*Math.PI*2;const px=Math.round(f.x+Math.cos(a)*rr),py=Math.round(f.y+Math.sin(a)*rr+u*u*6);ctx.fillRect(px,py,2,2);if(u<0.5)ctx.fillRect(Math.round(f.x+Math.cos(a)*rr*0.6),Math.round(f.y+Math.sin(a)*rr*0.6),1,1)}
   if(u<0.15){ctx.globalAlpha=1-u/0.15;ctx.fillStyle='#fff';ctx.fillRect(Math.round(f.x)-2,Math.round(f.y)-2,5,5)}}
  ctx.restore()}
-const SFX2={S16_group:(c,l)=>{const fr=WAVE[Math.floor(l/5)%WAVE.length];c.drawImage(fr,0,0,600,338)},S15_festival:(c,l)=>{c.drawImage(IM['S15_festival'],0,0,600,338);fireworks(c,l)}};
+
+// garden flowers popping
+const FL=[];{let sd3=5;const r3=()=>(sd3=(sd3*16807)%2147483647)/2147483647;
+ const P=[[30,232],[60,218],[75,250],[45,192],[110,268],[565,250],[160,265],[255,262],[300,250],[330,268],[380,250],[420,262],[470,248],[515,232],[545,212],[560,175],[515,170],[455,92],[195,88],[245,108]];
+ P.forEach((p,i)=>FL.push({x:p[0],y:p[1],t0:4+i*3+Math.floor(r3()*3),c:['#ff6fa8','#ffd166','#ff8a5c','#b98bff','#6fd8ff','#ff4d6d'][i%6],s:r3()<.5?1:2}))}
+function flowers(ctx,l){ctx.imageSmoothingEnabled=false;for(const f of FL){const t=l-f.t0;if(t<0)continue;const g=Math.min(1,t/8),b=t<12?1+0.4*Math.sin(Math.PI*Math.min(1,t/12)):1;
+  const X=Math.round(f.x),Y=Math.round(f.y);const st=Math.round(12*g);ctx.fillStyle='#1f7a32';ctx.fillRect(X-1,Y-st,3,st);if(g>0.5){ctx.fillStyle='#3fb34f';ctx.fillRect(X+2,Y-6,5,3);ctx.fillRect(X-6,Y-8,5,3)}
+  const cy=Y-st,R=Math.round((3+f.s*2)*g*b);if(R<1)continue;ctx.fillStyle='#000';ctx.fillRect(X-R-1,cy-R-1,2*R+3,2*R+3);
+  ctx.fillStyle=f.c;ctx.fillRect(X-R,cy-1,2*R+1,3);ctx.fillRect(X-1,cy-R,3,2*R+1);ctx.fillRect(X-R+1,cy-R+1,2*R-1,2*R-1);
+  ctx.fillStyle='#fff3a0';ctx.fillRect(X-1,cy-1,3,3);
+  if(t<10){ctx.fillStyle='rgba(255,255,255,'+(1-t/10)+')';for(let k=0;k<6;k++){const a=k*1.047;ctx.fillRect(Math.round(X+Math.cos(a)*(R+3+t*1.5)),Math.round(cy+Math.sin(a)*(R+3+t*1.5)),2,2)}}}}
+const SFX2={S09c_feelings_garden:(c,l)=>{c.drawImage(IM['S09c_feelings_garden'],0,0,600,338);flowers(c,l)},S16_group:(c,l)=>{const fr=WAVE[Math.floor(l/5)%WAVE.length];c.drawImage(fr,0,0,600,338)},S15_festival:(c,l)=>{c.drawImage(IM['S15_festival'],0,0,600,338);fireworks(c,l)}};
 function sceneImg(sc,l){if(LMETA[sc])return compose(sc,l);if(SFX2[sc]){SFX2[sc](cx2,l);return comp}return IM[sc]}
 // ---- scene renderer into buf
 function sceneBuf(img,cam,u){const z=cam[0]+(cam[1]-cam[0])*eio(u),cx=cam[2]+(cam[3]-cam[2])*eio(u),cy=cam[4]+(cam[5]-cam[4])*eio(u);
@@ -151,7 +162,7 @@ window.render=function(f){
    drawT('泰瑞島｜UIB 電銷島',540,1690,{size:12,scale:4,color:'#fff'},lin(l,30,38));
    if(Math.floor(l/15)%2===0&&l>45)drawT('PRESS START',540,1810,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});
    confetti(Math.max(0,l-12),0,SY+150,W);header();return}
- const u=l/(S.dur-1);const img=sceneImg(S.img,f);sceneBuf(img,S.cam,u);
+ const u=l/(S.dur-1);const img=sceneImg(S.img,l);sceneBuf(img,S.cam,u);
  // shake
  let ox=0,oy=SY;for(const e of S.fx){if(e.t==='shake'&&l>=e.at&&l<e.at+e.len){ox+=((l%2)?1:-1)*e.amp*3}
    if(e.t==='hit'&&l>=e.at&&l<e.at+8){const a=(8-(l-e.at))*3;ox+=((l%2)?1:-1)*a;oy+=((l%3)-1)*a*.6}}
