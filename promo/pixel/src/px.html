@@ -62,7 +62,10 @@ const MOT={
 function compose(scene,l){
  cx2.clearRect(0,0,600,338);cx2.drawImage(PL[scene]||IM[scene],0,0,600,338);
  const m=LMETA[scene];if(!m)return comp;
- for(const name in m){const g=m[name],img=LAY[scene+'/'+name];const f=MOT[scene+'/'+name];const o=Object.assign({dx:0,dy:0,sx:1,sy:1,rot:0},f?f(l):{});
+ let ci=0;for(const name in m){const g=m[name],img=LAY[scene+'/'+name];
+  if(g.cape){const ph=ci++*1.3;for(let c=0;c<g.w;c++){const d=g.cape==='L'?(g.w-c):c;const k=Math.pow(d/g.w,1.3);
+    const dy=k*(5*Math.sin(l*0.32-d*0.11+ph)+2*Math.sin(l*0.55-d*0.2+ph*2));const dx=(g.cape==='L'?-1:1)*k*1.5*Math.sin(l*0.32-d*0.08+ph+1);
+    cx2.drawImage(img,c,0,1,g.h,g.x+c+dx,g.y+dy,1.15,g.h)}continue;}const f=MOT[scene+'/'+name];const o=Object.assign({dx:0,dy:0,sx:1,sy:1,rot:0},f?f(l):{});
   const ax=g.x+g.w/2,ay=g.y+g.h;cx2.save();cx2.translate(ax+o.dx,ay+o.dy);cx2.rotate(o.rot);cx2.scale(o.sx,o.sy);cx2.drawImage(img,-g.w/2,-g.h,g.w,g.h);cx2.restore();}
  return comp;}
 // ---- scene renderer into buf
