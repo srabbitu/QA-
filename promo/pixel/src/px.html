@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@900&family=Press+Start+2P&display=block">
-<style>html,body{margin:0;background:#000;width:1080px;height:1920px;overflow:hidden}canvas{display:block}</style></head><body>
+<style>@font-face{font-family:Cubic11;src:url('Cubic_11.ttf')}html,body{margin:0;background:#000;width:1080px;height:1920px;overflow:hidden}canvas{display:block}</style></head><body>
 <canvas id="c" width="1080" height="1920"></canvas>
 <script>
 const W=1080,H=1920,SW=1080,SH=759,SY=560,LW=360,LH=253,K=3;
@@ -13,7 +13,8 @@ const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),lin=(f,a,b)=>cl((f-a)/(b-a)),eio
 function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src})}
 // ---- pixel text: render small, threshold alpha, upscale nearest
 const tcache={};
-function ptxt(s,{size=14,scale=4,color='#fff',stroke='#000',font='"Noto Sans TC"',weight=900,olw=1}={}){
+function ptxt(s,{size=14,scale=4,color='#fff',stroke='#000',font='Cubic11',weight=400,olw=1}={}){
+ if(font==='Cubic11'){const tgt=size*scale;size=12;scale=Math.max(2,Math.round(tgt/12));}
  const key=[s,size,scale,color,stroke,font].join('|');if(tcache[key])return tcache[key];
  const o=document.createElement('canvas'),q=o.getContext('2d');q.font=`${weight} ${size}px ${font}`;
  const w=Math.ceil(q.measureText(s).width)+olw*2+4,h=Math.ceil(size*1.35)+olw*2+2;o.width=w;o.height=h;
@@ -78,10 +79,27 @@ function blit(px,ox,oy){ // px: pixelation factor (1=none)
  const w=Math.max(4,Math.round(LW/px)),h=Math.max(3,Math.round(LH/px));tiny.width=w;tiny.height=h;tx.imageSmoothingEnabled=true;tx.drawImage(buf,0,0,w,h);x.drawImage(tiny,ox,oy,SW,SH);}
 function bar(X,Y,w,v,col,flip){x.fillStyle='#fff';x.fillRect(X-6,Y-6,w+12,36);x.fillStyle='#3a1020';x.fillRect(X,Y,w,24);const vw=Math.round(w*v/100/6)*6;x.fillStyle=col;x.fillRect(flip?X+w-vw:X,Y,vw,24);x.fillStyle='rgba(255,255,255,.35)';x.fillRect(flip?X+w-vw:X,Y,vw,6);}
 function scanlines(){x.fillStyle='rgba(0,0,0,.18)';for(let y=SY;y<SY+SH;y+=6)x.fillRect(0,y,W,2)}
-function header(){drawT('TERRY ISLAND',540,170,{size:8,scale:5,font:'"Press Start 2P"',weight:400,color:'#ffd166'},0.9);drawT('泰瑞島',540,250,{size:12,scale:4,color:'#fff'},0.9)}
+function header(){x.imageSmoothingEnabled=false;x.drawImage(LOGO,330,96,84,84);drawT('泰瑞島',520,124,{size:12,scale:5,color:'#fff'});drawT('TERRY ISLAND',560,170,{size:8,scale:3,font:'"Press Start 2P"',weight:400,color:'#ffd166'})}
+// ---- frame + panels
+const BG='#0d1230';
+function frame(){x.fillStyle='#000';x.fillRect(0,SY-12,W,6);x.fillRect(0,SY+SH+6,W,6);x.fillStyle='#fff';x.fillRect(0,SY-6,W,6);x.fillRect(0,SY+SH,W,6);}
+function pbox(X,Y,w,h,fill='#14204a',edge='#fff'){x.fillStyle='#000';x.fillRect(X+6,Y+6,w,h);x.fillStyle=edge;x.fillRect(X,Y,w,h);x.fillStyle=fill;x.fillRect(X+6,Y+6,w-12,h-12);}
+function wrap(t,n){const a=[...t],out=[];let cur='';for(const ch of a){if(ch==='\n'){out.push(cur);cur='';continue}if(cur.length>=n&&!'，。！？」』、'.includes(ch)){out.push(cur);cur=''}cur+=ch}if(cur)out.push(cur);return out}
+const SPK={'客戶':['客戶魔王','#ef6a55','#ffb3a7'],'小狗':['小狗新人','#ffd166','#ffe7a3']};
+function dialog(txt,l,st){pbox(54,1380,972,290);let name=null,col='#fff',body=txt;const m=txt.match(/^(客戶|小狗)：([\s\S]*)$/);if(m){const sp=SPK[m[1]];name=sp[0];col=sp[2];body=m[2];
+  const t=ptxt(name,{size:12,scale:4,color:'#000',stroke:null});pbox(84,1340,t.w+48,74,sp[1],'#fff');drawT(name,84+(t.w+48)/2,1377,{size:12,scale:4,color:'#000',stroke:null});}
+ const lines=wrap(body,13);const shown=typed(body.replace(/\n/g,''),Math.max(0,l-st),0.9);let left=[...shown].length;
+ lines.forEach((ln,i)=>{const n=Math.min([...ln].length,left);left-=n;if(n<=0)return;const part=[...ln].slice(0,n).join('');const full=ptxt(ln,{size:12,scale:6,color:col});const t=ptxt(part,{size:12,scale:6,color:col});
+  x.imageSmoothingEnabled=false;const y0=lines.length>1?1470+i*96:1525;x.drawImage(t.o,Math.round(540-full.w/2),Math.round(y0-t.h/2),t.w,t.h)});
+ if([...shown].length>=[...body.replace(/\n/g,'')].length&&Math.floor(l/10)%2===0)drawT('▼',960,1630,{size:12,scale:3,color:'#fff'})}
+const CHAP=['出發','第一戰','漂流','上島','修行','第二戰','全島'];
+function progress(ch){const n=CHAP.length,w=120,g=16,X0=(W-(n*w+(n-1)*g))/2,Y=1745;for(let i=0;i<n;i++){const X=X0+i*(w+g);x.fillStyle=i<ch?'#ffd166':i===ch?'#ef6a55':'#2a3466';x.fillRect(X,Y,w,22);if(i===ch){x.fillStyle='#fff';x.fillRect(X,Y,w,6)}}
+ drawT('STAGE '+(ch+1)+'/'+n,300,1820,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});drawT(CHAP[ch],760,1822,{size:12,scale:4,color:'#fff'})}
+function chapOf(img){return ({S01_city_morning:0,S02_phone_rings:0,S03_round1:1,S04_ko:1,S05_drift:2,S06_harbor_welcome:3,S06b_islanders_welcome:3,S08_disc_masters:4,S09_dojo:4,S09b_qa_gate:4,S09c_feelings_garden:4,S10_deflect:4,S11_bubble_tea:4,S12_level_up:4,S13_rematch:5,S14_win:5,S17_world_map:6,S15_festival:6,S16_group:6})[img]}
+function chip(txt,a){const isEn=/^[A-Z0-9 !]+$/.test(txt);const o=isEn?{size:8,scale:5,font:'"Press Start 2P"',weight:400,color:'#14204a',stroke:null}:{size:12,scale:5,color:'#14204a',stroke:null};const t=ptxt(txt,o);x.save();x.globalAlpha=a;pbox(540-t.w/2-36,410,t.w+72,104,'#ffd166','#fff');x.restore();drawT(txt,540,462,o,a)}
 // ---- main
 window.render=function(f){
- x.fillStyle='#000';x.fillRect(0,0,W,H);
+ x.fillStyle=BG;x.fillRect(0,0,W,H);
  let s0=0,S=null,l=0,idx=0;for(let i=0;i<TL.length;i++){if(f<s0+TL[i].dur){S=TL[i];l=f-s0;idx=i;break}s0+=TL[i].dur}
  if(!S){S=TL[TL.length-1];l=S.dur-1}
  if(S.end==='count'){const g=IM['S16_group'];const k=Math.min(2,Math.floor(l/24)),lt=l-k*24;const cols=['#ef6a55','#ffd166','#69db7c'];
@@ -89,18 +107,18 @@ window.render=function(f){
    const jump=lt<10?Math.round(Math.sin(Math.PI*lt/10)*8)*3:0;blit(1,0,SY-jump);
    if(lt<5){x.fillStyle=`rgba(255,255,255,${0.35*(1-lt/5)})`;x.fillRect(0,SY,W,SH)}
    scanlines();
-   drawT('準備好了嗎？',540,470,{size:14,scale:5,color:'#ffd166'});
+   chip('準備好了嗎？',1);frame();
    const dy=-260*(1-eo(cl(lt/6)));const sq=lt>=6&&lt<10?1+0.12*Math.sin(Math.PI*(lt-6)/4):1;
    drawT(String(3-k),540,SY+SH/2+dy,{size:16,scale:22,font:'"Press Start 2P"',weight:400,color:cols[k],stroke:'#000',olw:2},1,sq);
    if(lt>=6&&lt<16){x.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<8;i++){const a=i*Math.PI/4,r=180+(lt-6)*28;x.fillRect(Math.round((540+Math.cos(a)*r)/6)*6,Math.round((SY+SH/2+Math.sin(a)*r*0.6)/6)*6,18,18)}}
-   const s2=typed('出發！',Math.max(0,l-50),0.3);if(s2&&k===2)drawT(s2,540,1450,{size:16,scale:5,color:'#fff'});
+   dialog(k===2?'出發！':'',l,50);progress(6);
    header();return}
- if(S.end==='card'){const g=IM['S16_group'];sceneBuf(g,[1.08,1.14,.5,.5,.48,.46],l/(S.dur-1));const jump=l<12?Math.round(Math.sin(Math.PI*l/12)*14)*3:0;blit(1,0,SY-jump);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(0,0,0,${.45*eo(lin(l,4,20))})`;x.fillRect(0,SY,W,SH);scanlines();
-   const s=eo(lin(l,4,18));x.save();x.translate(540,SY+270);x.scale(s,s);x.drawImage(LOGO,-150,-150,300,300);x.restore();
-   drawT('上島！',540,SY+560,{size:26,scale:6,color:'#ffd166'},lin(l,10,16),.7+.3*eo(lin(l,10,20)));
-   drawT('泰瑞島｜UIB 電銷島',540,1430,{size:14,scale:4},lin(l,20,28));
-   drawT('terry-island.pages.dev',540,1550,{size:9,scale:5,font:'"Press Start 2P"',weight:400,color:'#8ecae6'},lin(l,28,36));
-   if(Math.floor(l/15)%2===0&&l>40)drawT('PRESS START',540,1700,{size:8,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'});
+ if(S.end==='card'){const g=IM['S16_group'];sceneBuf(g,[1.1,1.16,.5,.5,.48,.46],l/(S.dur-1));blit(1+3*eo(lin(l,0,14)),0,SY);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(13,18,48,${.78*eo(lin(l,2,16))})`;x.fillRect(0,SY,W,SH);scanlines();frame();
+   const s=eo(lin(l,4,18));x.save();x.translate(540,SY+250);x.scale(s,s);x.imageSmoothingEnabled=true;x.drawImage(LOGO,-170,-170,340,340);x.restore();
+   drawT('上島！',540,SY+570,{size:12,scale:14,color:'#ffd166',stroke:'#000',olw:1},lin(l,10,16),.7+.3*eo(lin(l,10,20)));
+   const bt=eo(lin(l,22,32));if(bt>0){const p=1+0.04*Math.sin(Math.max(0,l-32)*0.25);x.save();x.translate(540,1500);x.scale(bt*p,bt*p);x.translate(-540,-1500);pbox(60,1410,960,180,'#ffd166','#fff');drawT('terry-island.pages.dev',540,1478,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#14204a',stroke:null});drawT('▶ 點連結，馬上上島',540,1540,{size:12,scale:4,color:'#14204a',stroke:null});x.restore();}
+   drawT('泰瑞島｜UIB 電銷島',540,1690,{size:12,scale:4,color:'#fff'},lin(l,30,38));
+   if(Math.floor(l/15)%2===0&&l>45)drawT('PRESS START',540,1810,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});
    confetti(Math.max(0,l-12),0,SY+150,W);header();return}
  const u=l/(S.dur-1);const img=LMETA[S.img]?compose(S.img,l):IM[S.img];sceneBuf(img,S.cam,u);
  // shake
@@ -114,24 +132,25 @@ window.render=function(f){
   if(e.t==='flash'&&t>=0&&t<6){x.fillStyle=`rgba(255,255,255,${1-t/6})`;x.fillRect(0,SY,W,SH)}
   if(e.t==='big'&&t>=0&&t<e.len){const sc=t<6?0.5+0.5*eo(t/6):1;const fl=t>e.len-6?(e.len-t)/6:1;drawT(e.txt,540,SY+SH/2,{size:16,scale:7,font:'"Press Start 2P"',weight:400,color:e.c,stroke:'#000',olw:2},fl,sc)}
   if(e.t==='tag'&&t>=0){const sc=0.4+0.6*eo(cl(t/6));drawT(e.txt,e.x*W,SY+e.y*SH+18,{size:12,scale:6,font:'"Press Start 2P"',weight:400,color:'#fff',stroke:e.c,olw:2},1,sc)}
-  if(e.t==='pop'&&t>=0&&t<30){drawT(e.txt,e.x*W,SY+e.y*SH-t*3,{size:12,scale:5,font:e.txt.match(/[A-Z+0-9]/)?'"Press Start 2P"':'"Noto Sans TC"',weight:e.txt.match(/[A-Z+0-9]/)?400:900,color:e.c,stroke:'#000',olw:2},t>22?(30-t)/8:1,0.6+0.4*eo(cl(t/5)))}
+  if(e.t==='pop'&&t>=0&&t<30){drawT(e.txt,e.x*W,SY+e.y*SH-t*3,{size:12,scale:5,font:e.txt.match(/[A-Z+0-9]/)?'"Press Start 2P"':'Cubic11',weight:400,color:e.c,stroke:'#000',olw:2},t>22?(30-t)/8:1,0.6+0.4*eo(cl(t/5)))}
   if(e.t==='combo'&&t>=0){const n=t<14?1:t<28?2:3;drawT('COMBO x'+n,540,SY+110,{size:14,scale:5,font:'"Press Start 2P"',weight:400,color:['#ffd166','#ff8fab','#69db7c'][n-1],stroke:'#000',olw:2},1,1+.25*Math.max(0,1-((t%14)/5)))}
   if(e.t==='confetti'&&t>=0)confetti(t,0,SY+SH*.5,W);
  }
- scanlines();
+ scanlines();frame();
  // HUD above scene
  const huds=S.fx.filter(e=>e.t==='hud');if(huds.length){let a=huds[0].a[0],b=huds[0].b[0];for(const h of huds){const tt=h.len?eio(lin(l,h.at,h.at+h.len)):1;if(!h.len||l>=h.at){a=h.a[0]+(h.a[1]-h.a[0])*tt;b=h.b[0]+(h.b[1]-h.b[0])*tt}}
-  bar(60,420,400,a,'#ffd166',false);bar(620,420,400,b,'#ef6a55',true);drawT('小狗新人',150,495,{size:10,scale:4});drawT('客戶魔王',930,495,{size:10,scale:4});drawT('VS',540,432,{size:10,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'})}
- else if(S.top){drawT(S.top,540,470,{size:14,scale:5,color:'#ffd166',font:/^[A-Z0-9 !]+$/.test(S.top)?'"Press Start 2P"':'"Noto Sans TC"',weight:/^[A-Z0-9 !]+$/.test(S.top)?400:900},lin(l,2,8))}
+  bar(60,420,400,a,'#ffd166',false);bar(620,420,400,b,'#ef6a55',true);drawT('小狗新人',150,495,{size:12,scale:4,color:'#ffd166'});drawT('客戶魔王',930,495,{size:12,scale:4,color:'#ef6a55'});drawT('VS',540,432,{size:10,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'})}
+ else if(S.top){chip(S.top,lin(l,2,8))}
  // subtitle / dialogue below
- if(S.sub||S.subs){let txt=S.sub,st=6;if(S.subs){for(const q of S.subs)if(l>=q[0]){txt=q[1];st=q[0]+2}}const s=txt?typed(txt,Math.max(0,l-st),0.9):"";if(s){const full=ptxt(txt,{size:16,scale:5,color:'#fff'});drawT(s,540,1450,{size:16,scale:5,color:'#fff'},1,Math.min(1,1010/full.w))}}
- if(S.dlg){const by=1360,bh=300;x.fillStyle='#fff';x.fillRect(54,by-6,972,bh+12);x.fillStyle='#14204a';x.fillRect(60,by,960,bh);
-  x.imageSmoothingEnabled=false;x.drawImage(PORT,84,by+24,252,252);
-  drawT('島主 泰瑞',560,by+60,{size:10,scale:4,color:'#ffd166'});const s=typed(S.dlg,Math.max(0,l-8),0.6);if(s)drawT(s,680,by+160,{size:12,scale:4,color:'#fff'});
-  if(Math.floor(l/10)%2===0&&l>40)drawT('▼',960,by+250,{size:8,scale:4,color:'#fff'})}
+ if(S.sub||S.subs){let txt=S.sub,st=6;if(S.subs){for(const q of S.subs)if(l>=q[0]){txt=q[1];st=q[0]+2}}if(txt)dialog(txt,l,st)}
+ if(S.dlg){const by=1380,bh=290;pbox(54,by,972,bh);
+  x.imageSmoothingEnabled=false;x.drawImage(PORT,84,by+22,246,246);
+  drawT('島主 泰瑞',470,by+60,{size:12,scale:4,color:'#ffd166'});const s=typed(S.dlg,Math.max(0,l-8),0.6);const L2=wrap(s,10);L2.forEach((ln,i)=>{const t=ptxt(ln,{size:12,scale:5,color:'#fff'});x.imageSmoothingEnabled=false;x.drawImage(t.o,370,Math.round(by+170+i*80-t.h/2),t.w,t.h)});
+  if(Math.floor(l/10)%2===0&&l>40)drawT('▼',960,by+250,{size:12,scale:3,color:'#fff'})}
+ {const ch=chapOf(S.img);if(ch!==undefined)progress(ch);}
  header();
 };
-window.ready=(async()=>{TL=window.TLDATA;await document.fonts.load('900 14px "Noto Sans TC"','泰瑞島');await document.fonts.load('16px "Press Start 2P"');await document.fonts.ready;
+window.ready=(async()=>{TL=window.TLDATA;await document.fonts.load('12px Cubic11','泰瑞島');await document.fonts.load('16px "Press Start 2P"');await document.fonts.ready;
  for(const s of TL)if(s.img&&!IM[s.img])IM[s.img]=await load(FR+s.img+'.png');IM['S16_group']=IM['S16_group']||await load(FR+'S16_group.png');
  PORT=await load(FR+'ref_terry_portrait_v2.png');LMETA=window.LAYDATA||{};for(const sc in LMETA){PL[sc]=await load(AN+'plates/'+sc+'.png');for(const n in LMETA[sc])LAY[sc+'/'+n]=await load(AN+'layers/'+sc+'__'+n+'.png');}
  LOGO=await load('data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -3 70 70"><path d="M32 5 54 17.5v25L32 55 24.5 50.7 12.5 58.5l3-12.3L10 42.5v-25z" transform="matrix(1.08 0 0 1.08 -2.56 -2.48)" fill="#fff" stroke="#fff" stroke-width="9.5" stroke-linejoin="round"/><path d="M32 5 54 17.5v25L32 55 24.5 50.7 12.5 58.5l3-12.3L10 42.5v-25z" transform="matrix(1.08 0 0 1.08 -2.56 -2.48)" fill="#ef6a55" stroke="#ef6a55" stroke-width="4.6" stroke-linejoin="round"/><path d="M15 45c4.5-7.5 10.5-11 17-11s12.5 3.5 17 11z" fill="#fffaf0"/><path d="M29.2 35.5h5.6L33.4 19h-2.8z" fill="#fffaf0"/><path d="M29.9 25.5h4.2l.35 3.2h-4.9z" fill="#ef6a55"/><path d="M30.2 19v-2.6a1.8 1.8 0 0 1 3.6 0V19z" fill="#ffd166"/><path d="M23.2 50c1.9-1.2 3.7-1.2 5.6 0s3.7 1.2 5.6 0 3.7-1.2 5.6 0" fill="none" stroke="#fffaf0" stroke-width="2" stroke-linecap="round"/></svg>`));
