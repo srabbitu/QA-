@@ -69,6 +69,36 @@ function compose(scene,l){
     cx2.drawImage(img,c,0,1,g.h,g.x+c+dx,g.y+dy,1.15,g.h)}continue;}const f=MOT[scene+'/'+name];const o=Object.assign({dx:0,dy:0,sx:1,sy:1,rot:0},f?f(l):{});
   const ax=g.x+g.w/2,ay=g.y+g.h;cx2.save();cx2.translate(ax+o.dx,ay+o.dy);cx2.rotate(o.rot);cx2.scale(o.sx,o.sy);cx2.drawImage(img,-g.w/2,-g.h,g.w,g.h);cx2.restore();}
  return comp;}
+
+// ---- special scene effects
+const WARP={S16_group:{chars:[
+ [30,128,212],[75,128,212],[125,132,212],[172,130,212],[225,132,212],[272,130,212],[322,135,210],[370,132,212],[410,135,212],[450,140,212],[490,132,212],[530,140,212],[568,140,212],
+ [85,200,305],[168,200,302],[252,196,306],[322,210,300],[402,200,305],[490,205,305]]}};
+const WBASE={};
+function warpScene(sc,l,ctx){const W0=600,H0=338;let base=WBASE[sc];if(!base){const tmp=document.createElement('canvas');tmp.width=W0;tmp.height=H0;const tc=tmp.getContext('2d');tc.drawImage(IM[sc],0,0,W0,H0);base=WBASE[sc]=tc.getImageData(0,0,W0,H0);base.out=tc.createImageData(W0,H0)}
+ const src=base.data,out=base.out.data;out.set(src);const ch=WARP[sc].chars;
+ for(let i=0;i<ch.length;i++){const [cx,yt,yb]=ch[i];const h=yb-yt,ph=i*1.7;const front=i>=13;const sig=front?34:20;
+  const rot=(front?0.06:0.08)*Math.sin(l*0.22+ph);const bob=(front?2.2:1.6)*Math.abs(Math.sin(l*0.22+ph));
+  const x0=Math.max(0,cx-sig*2),x1=Math.min(W0-1,cx+sig*2),y0=Math.max(0,yt-12);
+  for(let y=y0;y<=yb;y++){const k=Math.min(1,(yb-y)/h);const fy=y<yt?(y-y0)/(yt-y0+1):1;
+   for(let x=x0;x<=x1;x++){const g=Math.exp(-((x-cx)*(x-cx))/(2*sig*sig))*fy;if(g<0.03)continue;
+    const sx=Math.round(x-g*rot*(yb-y)),sy=Math.round(y+g*bob*k);if(sx<0||sx>=W0||sy<0||sy>=H0)continue;
+    const o=(y*W0+x)*4,q=(sy*W0+sx)*4;out[o]=src[q];out[o+1]=src[q+1];out[o+2]=src[q+2];}}}
+ ctx.putImageData(base.out,0,0)}
+// fireworks for festival
+const FW=[];{let sd2=11;const r2=()=>(sd2=(sd2*16807)%2147483647)/2147483647;const spots=[[95,40],[455,38],[548,60],[30,30],[160,22],[520,22],[420,70],[60,75],[580,25],[180,60]];
+ for(let i=0;i<14;i++){const sp=spots[i%spots.length];FW.push({t0:i*6+Math.floor(r2()*4),x:sp[0]+(r2()-.5)*20,y:sp[1]+(r2()-.5)*10,c:['#ffd166','#ff6fa8','#6fd8ff','#b98bff','#7dff9a','#ff8a5c'][i%6],n:14+Math.floor(r2()*8),r:18+r2()*14})}}
+function fireworks(ctx,l){ // pulse existing bursts
+ ctx.save();ctx.globalCompositeOperation='lighter';
+ for(const [cx,cy,R,ph] of [[100,45,42,0],[455,40,42,2],[549,62,30,4]]){const a=0.35+0.35*Math.sin(l*0.35+ph);const sc=1+0.12*Math.sin(l*0.35+ph);ctx.globalAlpha=a;ctx.drawImage(IM['S15_festival'],cx-R,cy-R,2*R,2*R,cx-R*sc,cy-R*sc,2*R*sc,2*R*sc)}
+ ctx.globalAlpha=1;
+ for(const f of FW){const t=((l-f.t0)%42+42)%42;if(t<8){const yy=f.y+60*(1-t/8);ctx.fillStyle='#fff3c0';ctx.fillRect(Math.round(f.x),Math.round(yy),2,4);continue}
+  const u=(t-8)/34;if(u>1)continue;const rr=f.r*(1-Math.pow(1-u,3));ctx.fillStyle=f.c;ctx.globalAlpha=1-u*u;
+  for(let k=0;k<f.n;k++){const a=k/f.n*Math.PI*2;const px=Math.round(f.x+Math.cos(a)*rr),py=Math.round(f.y+Math.sin(a)*rr+u*u*6);ctx.fillRect(px,py,2,2);if(u<0.5)ctx.fillRect(Math.round(f.x+Math.cos(a)*rr*0.6),Math.round(f.y+Math.sin(a)*rr*0.6),1,1)}
+  if(u<0.15){ctx.globalAlpha=1-u/0.15;ctx.fillStyle='#fff';ctx.fillRect(Math.round(f.x)-2,Math.round(f.y)-2,5,5)}}
+ ctx.restore()}
+const SFX2={S16_group:(c,l)=>warpScene('S16_group',l,c),S15_festival:(c,l)=>{c.drawImage(IM['S15_festival'],0,0,600,338);fireworks(c,l)}};
+function sceneImg(sc,l){if(LMETA[sc])return compose(sc,l);if(SFX2[sc]){SFX2[sc](cx2,l);return comp}return IM[sc]}
 // ---- scene renderer into buf
 function sceneBuf(img,cam,u){const z=cam[0]+(cam[1]-cam[0])*eio(u),cx=cam[2]+(cam[3]-cam[2])*eio(u),cy=cam[4]+(cam[5]-cam[4])*eio(u);
  const sw=img.width/z,sh=img.height/z;let sx=cx*img.width-sw/2,sy=cy*img.height-sh/2;sx=cl(sx,0,img.width-sw);sy=cl(sy,0,img.height-sh);
@@ -102,7 +132,7 @@ window.render=function(f){
  x.fillStyle=BG;x.fillRect(0,0,W,H);
  let s0=0,S=null,l=0,idx=0;for(let i=0;i<TL.length;i++){if(f<s0+TL[i].dur){S=TL[i];l=f-s0;idx=i;break}s0+=TL[i].dur}
  if(!S){S=TL[TL.length-1];l=S.dur-1}
- if(S.end==='count'){const g=IM['S16_group'];const k=Math.min(2,Math.floor(l/24)),lt=l-k*24;const cols=['#ef6a55','#ffd166','#69db7c'];
+ if(S.end==='count'){const g=sceneImg('S16_group',f);const k=Math.min(2,Math.floor(l/24)),lt=l-k*24;const cols=['#ef6a55','#ffd166','#69db7c'];
    sceneBuf(g,[1.0,1.08,.5,.5,.5,.48],l/(S.dur-1));
    const jump=lt<10?Math.round(Math.sin(Math.PI*lt/10)*8)*3:0;blit(1,0,SY-jump);
    if(lt<5){x.fillStyle=`rgba(255,255,255,${0.35*(1-lt/5)})`;x.fillRect(0,SY,W,SH)}
@@ -113,14 +143,14 @@ window.render=function(f){
    if(lt>=6&&lt<16){x.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<8;i++){const a=i*Math.PI/4,r=180+(lt-6)*28;x.fillRect(Math.round((540+Math.cos(a)*r)/6)*6,Math.round((SY+SH/2+Math.sin(a)*r*0.6)/6)*6,18,18)}}
    dialog(k===2?'出發！':'',l,50);progress(6);
    header();return}
- if(S.end==='card'){const g=IM['S16_group'];sceneBuf(g,[1.1,1.16,.5,.5,.48,.46],l/(S.dur-1));blit(1+3*eo(lin(l,0,14)),0,SY);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(13,18,48,${.78*eo(lin(l,2,16))})`;x.fillRect(0,SY,W,SH);scanlines();frame();
+ if(S.end==='card'){const g=sceneImg('S16_group',f);sceneBuf(g,[1.1,1.16,.5,.5,.48,.46],l/(S.dur-1));blit(1+3*eo(lin(l,0,14)),0,SY);if(l<8){x.fillStyle=`rgba(255,255,255,${1-l/8})`;x.fillRect(0,SY,W,SH)}x.fillStyle=`rgba(13,18,48,${.78*eo(lin(l,2,16))})`;x.fillRect(0,SY,W,SH);scanlines();frame();
    const s=eo(lin(l,4,18));x.save();x.translate(540,SY+250);x.scale(s,s);x.imageSmoothingEnabled=true;x.drawImage(LOGO,-170,-170,340,340);x.restore();
    drawT('上島！',540,SY+570,{size:12,scale:14,color:'#ffd166',stroke:'#000',olw:1},lin(l,10,16),.7+.3*eo(lin(l,10,20)));
    const bt=eo(lin(l,22,32));if(bt>0){const p=1+0.04*Math.sin(Math.max(0,l-32)*0.25);x.save();x.translate(540,1500);x.scale(bt*p,bt*p);x.translate(-540,-1500);pbox(60,1410,960,180,'#ffd166','#fff');drawT('terry-island.pages.dev',540,1500,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#14204a',stroke:null});x.restore();}
    drawT('泰瑞島｜UIB 電銷島',540,1690,{size:12,scale:4,color:'#fff'},lin(l,30,38));
    if(Math.floor(l/15)%2===0&&l>45)drawT('PRESS START',540,1810,{size:8,scale:4,font:'"Press Start 2P"',weight:400,color:'#8ecae6'});
    confetti(Math.max(0,l-12),0,SY+150,W);header();return}
- const u=l/(S.dur-1);const img=LMETA[S.img]?compose(S.img,l):IM[S.img];sceneBuf(img,S.cam,u);
+ const u=l/(S.dur-1);const img=sceneImg(S.img,f);sceneBuf(img,S.cam,u);
  // shake
  let ox=0,oy=SY;for(const e of S.fx){if(e.t==='shake'&&l>=e.at&&l<e.at+e.len){ox+=((l%2)?1:-1)*e.amp*3}
    if(e.t==='hit'&&l>=e.at&&l<e.at+8){const a=(8-(l-e.at))*3;ox+=((l%2)?1:-1)*a;oy+=((l%3)-1)*a*.6}}
