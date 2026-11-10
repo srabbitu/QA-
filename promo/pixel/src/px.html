@@ -121,7 +121,7 @@ window.render=function(f){
   bar(60,420,400,a,'#ffd166',false);bar(620,420,400,b,'#ef6a55',true);drawT('小狗新人',150,495,{size:10,scale:4});drawT('客戶魔王',930,495,{size:10,scale:4});drawT('VS',540,432,{size:10,scale:5,font:'"Press Start 2P"',weight:400,color:'#fff'})}
  else if(S.top){drawT(S.top,540,470,{size:14,scale:5,color:'#ffd166',font:/^[A-Z0-9 !]+$/.test(S.top)?'"Press Start 2P"':'"Noto Sans TC"',weight:/^[A-Z0-9 !]+$/.test(S.top)?400:900},lin(l,2,8))}
  // subtitle / dialogue below
- if(S.sub){const s=typed(S.sub,Math.max(0,l-6),0.9);if(s){const full=ptxt(S.sub,{size:16,scale:5,color:'#fff'});drawT(s,540,1450,{size:16,scale:5,color:'#fff'},1,Math.min(1,1010/full.w))}}
+ if(S.sub||S.subs){let txt=S.sub,st=6;if(S.subs){for(const q of S.subs)if(l>=q[0]){txt=q[1];st=q[0]+2}}const s=txt?typed(txt,Math.max(0,l-st),0.9):"";if(s){const full=ptxt(txt,{size:16,scale:5,color:'#fff'});drawT(s,540,1450,{size:16,scale:5,color:'#fff'},1,Math.min(1,1010/full.w))}}
  if(S.dlg){const by=1360,bh=300;x.fillStyle='#fff';x.fillRect(54,by-6,972,bh+12);x.fillStyle='#14204a';x.fillRect(60,by,960,bh);
   x.imageSmoothingEnabled=false;x.drawImage(PORT,84,by+24,252,252);
   drawT('島主 泰瑞',560,by+60,{size:10,scale:4,color:'#ffd166'});const s=typed(S.dlg,Math.max(0,l-8),0.6);if(s)drawT(s,680,by+160,{size:12,scale:4,color:'#fff'});

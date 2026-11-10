@@ -107,8 +107,10 @@ def hit(): return noise(0.18, 0.05, 3) + 0.6 * sq(40, 0.18) * np.exp(-np.arange(
 for i, s in enumerate(TL):
     t0 = sec(i)
     add(sfx, t0, noise(0.12, 0.03, 1) * 0.6, 0.12)  # transition swish
-    if s.get('sub') or s.get('top'):
+    if s.get('sub') or s.get('top') or s.get('subs'):
         for k in range(5): add(sfx, t0 + 0.2 + k * 0.07, blip(84, 0.025, 0.5), 0.05)  # text ticks
+    for q in s.get('subs', [])[1:]:
+        for k in range(5): add(sfx, t0 + F(q[0]) + 0.07 + k * 0.07, blip(84, 0.025, 0.5), 0.05)
     for e in s.get('fx', []):
         at = t0 + F(e.get('at', 0))
         tp = e['t']
