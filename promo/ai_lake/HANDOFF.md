@@ -3,12 +3,13 @@
 ## 現況
 - 7 張插畫已完成，1920×1080 PNG，放在本資料夾：ai01_lake … ai07_finale。
 - Canva 設計「AI話術湖插畫」（DAHauWg01SQ），第 1～7 頁對應 ai01～ai07。
-- 女神目前是 Q 版人形（短銀髮、睡蓮花冠），但仍和島民風格不一致，準備換成動物或精靈造型。
+- 湖之守護者已從 Q 版人形女神換成水獺（角色表選項 A：荷葉＋白睡蓮花冠、金色披肩、小光環）。
+- ai04、ai05、ai07 已重生並更新到設計第 4、5、7 頁，本資料夾的 PNG 也已覆蓋；其餘四張未動。
 
-## 下一步
-1. 用下方提示詞生成六選一角色表（A～F），最左邊放小狗新人當比例尺。
-2. 使用者選定角色後，只重生 ai04、ai05、ai07，換掉女神，另外四張不動。
-3. 把新圖放進設計 DAHauWg01SQ 的第 4、5、7 頁，再匯出 1920×1080 PNG，覆蓋本資料夾的舊圖。
+## 已完成
+1. 六選一角色表（A～F）已生成，使用者選 A 水獺。
+2. ai04、ai05、ai07 已重生，女神換成水獺，另外四張不動。
+3. 新圖已放進設計 DAHauWg01SQ 第 4、5、7 頁，並匯出 1920×1080 PNG 覆蓋本資料夾舊圖。
 
 ## Canva 參考圖 media id
 | 用途 | media id |
@@ -21,6 +22,8 @@
 | ai03 | MAHauAeJoDE |
 | ai06 | MAHauHmGdNY |
 | 舊版女神 ai04／ai05／ai07（Q 版人形） | MAHaucHpis4／MAHauXEtt1w／MAHauWL2AuU |
+| 六選一角色表 | MAHazy7-Yjg |
+| 水獺版 ai04／ai05／ai07（現行） | MAHaz-o1bV4／MAHaz2rJhYo／MAHaz6ARtoM |
 
 ## 角色表提示詞（使用者提供，直接使用，參考圖帶入小狗 MAHacIfT6ZI）
 A character lineup sheet in detailed 16-bit pixel art, same style and same chibi proportions as the cream puppy newbie with a black headset (include him on the far left for scale). Six original candidate "lake guardian" characters standing in a row on a moonlit lakeside, each holding a small golden book and a small silver book: (A) a gentle otter wearing a lily-pad and white water-lily crown with a light gold shawl; (B) a round standing koi fish spirit, white with gold and red patches, fins like flowing sleeves, small golden halo; (C) a round-headed lotus sprite wearing a pink-white lotus bud as a hat and a petal dress; (D) a translucent blue water-drop spirit with tiny stars inside and a small golden halo, little water hands; (E) a chubby white swan with a tiny gold crown and wing-cape; (F) a kind old frog sage with a lotus-leaf hat, a little white beard and a cattail walking stick. All characters: two-head-tall chibi, simple black dot eyes with one white highlight, pink blush, tiny simple mouth, no human hair, no big anime eyes, soft rounded silhouettes, cozy and happy, consistent outline and shading, plain dark background, no text
